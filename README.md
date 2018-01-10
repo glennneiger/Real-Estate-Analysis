@@ -1,2 +1,2 @@
 # Real-Estate-Analysis
-Foreclosure real estate analysis.
+New Jersey foreclosure real estate analysis performed at the county level.
