@@ -206,3 +206,22 @@ def HTMLtoDF(url):
     print(datetime.now() - startTime)
 
     return RealEstateData
+
+browser.open(url)
+stuff = browser.find_link()
+browser.follow_link(stuff)
+stuff2 = browser.get_current_page()
+stuff3 = stuff2.find('table')
+add = 0
+for x in stuff3.findAll('td'):
+    if add == 1:
+        tag_str = str(x)
+        tag_str = tag_str.replace('<td>','')
+        tag_str = tag_str.replace('</td>', '')
+        tag_str_spl = tag_str.split('<br/>')
+        print(tag_str_spl)
+        #print('Street: ' + tag_str[0])
+        #print('City, ZIP: ' + tag_str[1])
+        add = 0
+    if x.text == 'Address :':
+        add = 1
