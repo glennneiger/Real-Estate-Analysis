@@ -7,6 +7,19 @@ from datetime import datetime
 browser = mechanicalsoup.StatefulBrowser()
 baseUrl = 'https://salesweb.civilview.com'
 
+listingDetails = ['Sales Date :', 'Sheriff # :', 'Priors :', 'Defendant :', 'Plaintiff :', 'Court Case # :', \
+                  'Address :', 'Approx. Judgment* :', 'Attorney :', 'Description :', 'Approx. Upset* :']
+statusTypes = ['Pending Bankruptcy', 'Adjourned - Defendant', 'Adjourned - Court', 'Scheduled', \
+               'Adjourned - Plaintiff', 'Cancelled/Settled', 'Adjourned - Other', 'Purchased - 3rd Party', \
+               'Purchased - Plaintiff', 'Cancelled', 'Indefinite Bankruptcy', 'Vacated', 'Canceled', \
+               'Adjournment Plaintiff', 'Adjournment Defendant', 'Purchased - Buy Back', 'Purchased - Third Party', \
+               'Settled', 'Bankrupt', 'Reinstated', 'Redeemed', 'Vacate ', 'ADJOURNED DUE TO BANKRUPTCY', \
+               'Defendant Adjournment', 'Plaintiff Adjournment', 'Bankruptcy', 'Bankuptcy', \
+               'Adjourned per Court Order', 'Buy Back', 'Purchased', 'Sheriff Adjournment', 'On Hold', \
+               'Hold In Abeyance', 'Adjourned - Bankruptcy', 'Adjourned - Statuatory', 'Rescheduled', 'Re-Scheduled']
+purchaseTypes = ['Purchased - 3rd Party', 'Purchased - Plaintiff', 'Purchased - Buy Back', 'Purchased - Third Party', \
+                 'Purchased']
+
 def HTMLTableToDF(table, **kwargs):
     n_columns = 0
     n_rows = 0
@@ -52,8 +65,6 @@ def HTMLTableToDF(table, **kwargs):
             column_marker += 1
         if len(columns) > 0:
             row_marker += 1
-    print(kwargs)
-    print('county' in kwargs.keys())
     if 'county' in kwargs.keys():
         df['County, State'] = kwargs['county']
         df['Status'] = kwargs['status']
@@ -61,6 +72,7 @@ def HTMLTableToDF(table, **kwargs):
 
 
 def URLDetails(details_url):
+
     global listingDetails
     global statusTypes
 
@@ -78,18 +90,18 @@ def URLDetails(details_url):
         if n_table == 1:
             for row in table.findAll('tr'):
 
-                test = 0
+                label = 0
                 n_col = 0
                 for column in row.findAll('td'):
                     n_col += 1
 
                     if column.text in listingDetails and n_col == 1:
                         details_label = column.text.replace(' :', "")
-                        test = 1
+                        label = 1
 
-                    if n_col == 2 and test == 1:
+                    if n_col == 2 and label == 1:
                         listing_details[details_label] = column.text
-                        test = 0
+                        label = 0
 
                     if column.text not in listingDetails and n_col == 1:
                         raise Exception('Missing listing details!!! Add ' + column.text + ' to listingDetails!')
@@ -207,21 +219,21 @@ def HTMLtoDF(url):
 
     return RealEstateData
 
-browser.open(url)
-stuff = browser.find_link()
-browser.follow_link(stuff)
-stuff2 = browser.get_current_page()
-stuff3 = stuff2.find('table')
-add = 0
-for x in stuff3.findAll('td'):
-    if add == 1:
-        tag_str = str(x)
-        tag_str = tag_str.replace('<td>','')
-        tag_str = tag_str.replace('</td>', '')
-        tag_str_spl = tag_str.split('<br/>')
-        print(tag_str_spl)
-        #print('Street: ' + tag_str[0])
-        #print('City, ZIP: ' + tag_str[1])
-        add = 0
-    if x.text == 'Address :':
-        add = 1
+#browser.open(url)
+#stuff = browser.find_link()
+#browser.follow_link(stuff)
+#stuff2 = browser.get_current_page()
+#stuff3 = stuff2.find('table')
+#add = 0
+#for x in stuff3.findAll('td'):
+#    if add == 1:
+#        tag_str = str(x)
+#        tag_str = tag_str.replace('<td>','')
+#        tag_str = tag_str.replace('</td>', '')
+#        tag_str_spl = tag_str.split('<br/>')
+#        print(tag_str_spl)
+#        #print('Street: ' + tag_str[0])
+#        #print('City, ZIP: ' + tag_str[1])
+#        add = 0
+#    if x.text == 'Address :':
+#        add = 1
