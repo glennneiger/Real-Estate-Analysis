@@ -1,7 +1,7 @@
 import requests
 import pandas as pd
 from bs4 import BeautifulSoup
-from utilities.utility import HTMLTableToDF, HTMLtoDF, URLDetails
+from utilities.utility import html_table_to_df, html_to_df, url_details
 
 url = 'https://salesweb.civilview.com/Sales/SalesSearch?countyId=8'
 detailed_url = 'https://salesweb.civilview.com/Sales/SaleDetails?PropertyId=361762545'
@@ -14,12 +14,11 @@ CountyURLs = {}
 
 ##
 
-r = requests.get(baseUrl)
+r = requests.get(url)
 RealEstateSoup = BeautifulSoup(r.text, 'lxml')
-
-for county in RealEstateSoup.findAll('a'):
-    CountyURLs[county.text] = baseUrl + county.get('href')
 
 ##
 
-HTMLtoDF(url)
+#HTMLtoDF(url)
+
+html_table_to_df(RealEstateSoup.find('table'))
