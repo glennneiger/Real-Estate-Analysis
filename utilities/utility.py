@@ -1,6 +1,4 @@
-import requests
 import pandas as pd
-from bs4 import BeautifulSoup
 import mechanicalsoup
 from datetime import datetime
 
@@ -17,7 +15,6 @@ statusTypes = ['Pending Bankruptcy', 'Adjourned - Defendant', 'Adjourned - Court
                'Defendant Adjournment', 'Plaintiff Adjournment', 'Bankruptcy', 'Bankuptcy',
                'Adjourned per Court Order', 'Buy Back', 'Purchased', 'Sheriff Adjournment', 'On Hold',
                'Hold In Abeyance', 'Adjourned - Bankruptcy', 'Adjourned - Statuatory', 'Rescheduled', 'Re-Scheduled']
-
 purchaseTypes = ['Purchased - 3rd Party', 'Purchased - Plaintiff', 'Purchased - Buy Back', 'Purchased - Third Party',
                  'Purchased']
 
