@@ -7,20 +7,22 @@ from datetime import datetime
 browser = mechanicalsoup.StatefulBrowser()
 baseUrl = 'https://salesweb.civilview.com'
 
-listingDetails = ['Sales Date :', 'Sheriff # :', 'Priors :', 'Defendant :', 'Plaintiff :', 'Court Case # :', \
+listingDetails = ['Sales Date :', 'Sheriff # :', 'Priors :', 'Defendant :', 'Plaintiff :', 'Court Case # :',
                   'Address :', 'Approx. Judgment* :', 'Attorney :', 'Description :', 'Approx. Upset* :']
-statusTypes = ['Pending Bankruptcy', 'Adjourned - Defendant', 'Adjourned - Court', 'Scheduled', \
-               'Adjourned - Plaintiff', 'Cancelled/Settled', 'Adjourned - Other', 'Purchased - 3rd Party', \
-               'Purchased - Plaintiff', 'Cancelled', 'Indefinite Bankruptcy', 'Vacated', 'Canceled', \
-               'Adjournment Plaintiff', 'Adjournment Defendant', 'Purchased - Buy Back', 'Purchased - Third Party', \
-               'Settled', 'Bankrupt', 'Reinstated', 'Redeemed', 'Vacate ', 'ADJOURNED DUE TO BANKRUPTCY', \
-               'Defendant Adjournment', 'Plaintiff Adjournment', 'Bankruptcy', 'Bankuptcy', \
-               'Adjourned per Court Order', 'Buy Back', 'Purchased', 'Sheriff Adjournment', 'On Hold', \
+statusTypes = ['Pending Bankruptcy', 'Adjourned - Defendant', 'Adjourned - Court', 'Scheduled',
+               'Adjourned - Plaintiff', 'Cancelled/Settled', 'Adjourned - Other', 'Purchased - 3rd Party',
+               'Purchased - Plaintiff', 'Cancelled', 'Indefinite Bankruptcy', 'Vacated', 'Canceled',
+               'Adjournment Plaintiff', 'Adjournment Defendant', 'Purchased - Buy Back', 'Purchased - Third Party',
+               'Settled', 'Bankrupt', 'Reinstated', 'Redeemed', 'Vacate ', 'ADJOURNED DUE TO BANKRUPTCY',
+               'Defendant Adjournment', 'Plaintiff Adjournment', 'Bankruptcy', 'Bankuptcy',
+               'Adjourned per Court Order', 'Buy Back', 'Purchased', 'Sheriff Adjournment', 'On Hold',
                'Hold In Abeyance', 'Adjourned - Bankruptcy', 'Adjourned - Statuatory', 'Rescheduled', 'Re-Scheduled']
-purchaseTypes = ['Purchased - 3rd Party', 'Purchased - Plaintiff', 'Purchased - Buy Back', 'Purchased - Third Party', \
+
+purchaseTypes = ['Purchased - 3rd Party', 'Purchased - Plaintiff', 'Purchased - Buy Back', 'Purchased - Third Party',
                  'Purchased']
 
-def HTMLTableToDF(table, **kwargs):
+
+def html_table_to_df(table, **kwargs):
     n_columns = 0
     n_rows = 0
     column_names = []
@@ -71,19 +73,16 @@ def HTMLTableToDF(table, **kwargs):
     return df
 
 
-def URLDetails(details_url):
-
+def url_details(details_url):
     global listingDetails
     global statusTypes
 
-    listingDetailsFormatted = [detail.replace(' :', '') for detail in listingDetails]
-    listing_details = {detail: None for detail in listingDetailsFormatted}
+    listing_details_formatted = [detail.replace(' :', '') for detail in listingDetails]
+    listing_details = {detail: None for detail in listing_details_formatted}
 
     browser.open(details_url)
     details_soup = browser.get_current_page()
-    details_soup_first_table = details_soup.find('table')
 
-    n = 0
     n_table = 0
     for table in details_soup.findAll('table'):
         n_table += 1
@@ -104,23 +103,19 @@ def URLDetails(details_url):
                         label = 0
 
                     if column.text not in listingDetails and n_col == 1:
-                        raise Exception('Missing listing details!!! Add ' + column.text + ' to listingDetails!')
+                        raise Exception("Missing listing details!!! Add " + column.text + " to listingDetails!")
         if n_table == 2:
-            DetailsDF = HTMLTableToDF(table)
-            print(DetailsDF)
-            statusCount = len(table.findAll('tr'))
-            listing_details['Status Count'] = statusCount
+            status_count = len(table.findAll('tr'))
+            listing_details['Status Count'] = status_count
             n_row = 0
             for row in table.findAll('tr'):
                 n_row += 1
-                test = 0
                 n_col = 0
-                purchased = 0
                 for column in row.findAll('td'):
                     n_col += 1
 
                     if n_col == 1 and column.text not in statusTypes:
-                        raise Exception('Missing status type!!! Add ' + column.text + ' to statusTypes!')
+                        raise Exception("Missing status type!!! Add " + column.text + " to statusTypes!")
 
                     if n_row == 2 and n_col == 1:
                         listing_details['Latest Status'] = column.text
@@ -136,15 +131,13 @@ def URLDetails(details_url):
                         listing_details['Purchased Amount'] = column.text
 
         if n_table == 3:
-            raise Exception('More than 2 tables on page. Investigate further at ' + browser.get_url())
+            raise Exception("More than 2 tables on page. Investigate further at " + browser.get_url())
 
     return listing_details
 
 
-def HTMLtoDF(url):
-    startTime = datetime.now()
-
-    global RealEstateData
+def html_to_df(url):
+    start_time = datetime.now()
 
     browser.open(url)
     soup = browser.get_current_page()
@@ -157,9 +150,9 @@ def HTMLtoDF(url):
         county_state = county_state_title[:hyphen_position]
 
     open_table = soup.find('table')
-    if open_table == None:
+    if open_table is None:
         return print('No open table data.')
-    OpenDF = HTMLTableToDF(open_table, county=county_state, status='Open')
+    open_df = html_table_to_df(open_table, county=county_state, status='Open')
 
     browser.select_form()
 
@@ -168,64 +161,63 @@ def HTMLtoDF(url):
         browser.submit_selected()
 
     except:
-        OpenDF['Status'] = 'Unknown'
+        open_df['Status'] = 'Unknown'
 
     closed_soup = browser.get_current_page()
     closed_table = closed_soup.find('table')
-    if closed_table == None:
+    if closed_table is None:
         return print('No closed table data')
-    ClosedDF = HTMLTableToDF(closed_table, county=county_state, status='Closed')
+    closed_df = html_table_to_df(closed_table, county=county_state, status='Closed')
 
-    UrlDF = pd.concat([OpenDF, ClosedDF], axis=0, ignore_index=True)
+    url_df = pd.concat([open_df, closed_df], axis=0, ignore_index=True)
 
-    DFIndex = UrlDF.index.values
+    latest_status = []
+    owed_amount = []
+    new_plaintiff = []
+    new_defendant = []
+    purchased_amount = []
+    court_case = []
+    status_count = []
 
-    latestStatus = []
-    owedAmount = []
-    newPlaintiff = []
-    newDefendant = []
-    purchasedAmount = []
-    courtCase = []
-    statusCount = []
+    for i in range(100):
+        for index, row in url_df.iterrows():
+            details = url_details(row['Listing URL'])
+            latest_status.append(details['Latest Status'])
+            new_plaintiff.append(details['Plaintiff'])
+            new_defendant.append(details['Defendant'])
+            court_case.append(details['Court Case #'])
+            status_count.append(details['Status Count'])
+            if details['Approx. Judgment*'] is None:
+                owed_amount.append(details['Approx. Upset*'])
+            else:
+                owed_amount.append(details['Approx. Judgment*'])
+            if details['Purchased?'] == 'Yes':
+                purchased_amount.append(details['Purchased Amount'])
+            else:
+                purchased_amount.append('Not Applicable')
 
-    for index, row in UrlDF.iterrows():
-        details = URLDetails(row['Listing URL'])
-        latestStatus.append(details['Latest Status'])
-        newPlaintiff.append(details['Plaintiff'])
-        newDefendant.append(details['Defendant'])
-        courtCase.append(details['Court Case #'])
-        statusCount.append(details['Status Count'])
-        if details['Approx. Judgment*'] == None:
-            owedAmount.append(details['Approx. Upset*'])
-        else:
-            owedAmount.append(details['Approx. Judgment*'])
-        if details['Purchased?'] == 'Yes':
-            purchasedAmount.append(details['Purchased Amount'])
-        else:
-            purchasedAmount.append('Not Applicable')
+    url_df['Plaintiff'] = new_plaintiff
+    url_df['Defendant'] = new_defendant
 
-    UrlDF['Plaintiff'] = newPlaintiff
-    UrlDF['Defendant'] = newDefendant
+    real_estate_data = url_df.assign(LastStatus=latest_status, AmountOwed=owed_amount,
+                                  PurchasedAmount=purchased_amount, CourtCase=court_case,
+                                  StatusCount=status_count)
 
-    RealEstateData = pd.concat([RealEstateData, UrlDF.assign(LastStatus=latestStatus, AmountOwed=owedAmount,
-                                                             PurchasedAmount=purchasedAmount, CourtCase=courtCase,
-                                                             StatusCount=statusCount)], axis=0, ignore_index=True)
-
-    RealEstateData = RealEstateData[
+    real_estate_data = real_estate_data[
         ['Sales Date', 'Status', 'Sheriff #', 'CourtCase', 'Plaintiff', 'Defendant', 'Address', 'County, State',
          'LastStatus', 'StatusCount', 'PurchasedAmount', 'AmountOwed', 'Listing URL']]
 
-    print(datetime.now() - startTime)
+    print(datetime.now() - start_time)
 
-    return RealEstateData
+    return real_estate_data
 
-#browser.open(url)
-#stuff = browser.find_link()
-#browser.follow_link(stuff)
-#stuff2 = browser.get_current_page()
-#stuff3 = stuff2.find('table')
-#add = 0
-#for x in stuff3.findAll('td'):
+# browser.open(url)
+# stuff = browser.find_link()
+# browser.follow_link(stuff)
+# stuff2 = browser.get_current_page()
+# stuff3 = stuff2.find('table')
+# add = 0
+# for x in stuff3.findAll('td'):
 #    if add == 1:
 #        tag_str = str(x)
 #        tag_str = tag_str.replace('<td>','')
